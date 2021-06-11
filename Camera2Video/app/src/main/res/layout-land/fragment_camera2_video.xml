@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+ Copyright 2014 The Android Open Source Project
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <ImageButton
+            android:visibility="gone"
+            android:id="@+id/info"
+            style="@android:style/Widget.Material.Light.Button.Borderless"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:contentDescription="@string/description_info"
+            android:padding="20dp"
+            android:src="@drawable/ic_action_info" />
+
+
+        <com.example.android.camera2.video.views.AutoFitTextureView
+            android:id="@+id/texture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"  />
+
+        <ImageButton
+            android:layout_gravity="top|center"
+            android:id="@+id/video"
+            android:scaleType="fitCenter"
+            android:layout_width="@dimen/recorder_size"
+            android:layout_height="@dimen/recorder_size"
+            android:background="@null"
+            android:src="@drawable/record_on" />
+
+        <TextView
+            android:id="@+id/ai_result"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_gravity="bottom|start"
+            android:textSize="18sp"
+            android:textColor="@color/yellow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/video_status"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_gravity="bottom|end"
+            android:textSize="18sp"
+            android:textColor="@color/yellow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <View
+            android:id="@+id/overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:foreground="@android:color/transparent" />
+
+        <TextView
+            android:id="@+id/camera_info"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="5dp"
+            android:textSize="18sp"
+            android:textColor="@color/yellow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+
+        <ImageButton
+            android:layout_gravity="top|end"
+            android:id="@+id/skip_settings"
+            android:scaleType="fitCenter"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_width="@dimen/skip_settings_size"
+            android:layout_height="@dimen/skip_settings_size"
+            android:background="@null"
+            android:src="@drawable/settings" />
+    </FrameLayout>
+    <LinearLayout
+        android:layout_weight="1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <FrameLayout
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_width="0dp">
+            <ImageView
+                android:layout_width="match_parent"
+                android:id="@+id/image2K"
+                android:layout_height="match_parent"
+                tools:ignore="NestedWeights" />
+            <View
+                android:id="@+id/overlay2k"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:foreground="@android:color/transparent" />
+            <TextView
+                android:id="@+id/translate2K"
+                android:layout_marginBottom="5dp"
+                android:layout_marginEnd="5dp"
+                android:textSize="18sp"
+                android:layout_gravity="bottom|end"
+                android:text="@string/translate_2k"
+                android:textColor="@color/yellow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </FrameLayout>
+        <FrameLayout
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:layout_width="0dp">
+            <ImageView
+                android:layout_width="match_parent"
+                android:id="@+id/image4K"
+                android:layout_height="match_parent"
+                tools:ignore="NestedWeights" />
+            <View
+                android:id="@+id/overlay4k"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:foreground="@android:color/transparent" />
+            <TextView
+                android:id="@+id/translate4K"
+                android:layout_marginBottom="5dp"
+                android:layout_marginEnd="5dp"
+                android:textSize="18sp"
+                android:layout_gravity="bottom|end"
+                android:text="@string/translate_4k"
+                android:textColor="@color/yellow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </FrameLayout>
+    </LinearLayout>
+</LinearLayout>

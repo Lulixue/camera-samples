@@ -16,4 +16,39 @@
 <resources>
     <string name="app_name">Camera2Video</string>
     <string name="capture">Capture</string>
+
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="description_info">Info</string>
+    <string name="permission_request">This sample needs permission for camera and audio recording.</string>
+    <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+
+    <string name="settings">Settings</string>
+    <string name="continue_to">Continue</string>
+    <string name="translate_2k">2K</string>
+    <string name="translate_4k">4K</string>
+
+
+    <string-array name="cameras">
+        <item>Camera 0</item>
+        <item>Camera 1</item>
+        <item>Camera 2</item>
+    </string-array>
+    <string-array name="cameras_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="default_legacy_cameras_values">
+        <item>2</item>
+    </string-array>
+
+    <string-array name="frame_per_seconds">
+        <item>30 fps</item>
+        <item>60 fps</item>
+    </string-array>
+    <string-array name="frame_per_seconds_values">
+        <item>30</item>
+        <item>60</item>
+    </string-array>
 </resources>

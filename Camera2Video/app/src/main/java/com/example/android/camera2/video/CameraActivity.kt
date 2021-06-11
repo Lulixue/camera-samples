@@ -16,12 +16,18 @@
 
 package com.example.android.camera2.video
 
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
+import java.lang.Exception
+
 
 class CameraActivity : AppCompatActivity() {
+    init {
+        AIHelper.instance.copyModelToCache(CameraApplication.instance)
+    }
 
     private lateinit var container: FrameLayout
 
@@ -29,8 +35,18 @@ class CameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
         container = findViewById(R.id.fragment_container)
+        try {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } catch (_ : Exception) {}
+
+        println(AIHelper.mmsBridge.stringFromJNI())
+        AIHelper.instance.initHelper()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        AIHelper.instance.destroyHelper()
+    }
     override fun onResume() {
         super.onResume()
         // Before setting full screen flags, we must wait a bit to let UI settle; otherwise, we may
@@ -52,5 +68,6 @@ class CameraActivity : AppCompatActivity() {
         const val ANIMATION_FAST_MILLIS = 50L
         const val ANIMATION_SLOW_MILLIS = 100L
         private const val IMMERSIVE_FLAG_TIMEOUT = 500L
+
     }
 }

@@ -18,53 +18,39 @@ package com.example.android.camera2.video.fragments
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
-import android.hardware.camera2.CameraCaptureSession
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraDevice
-import android.hardware.camera2.CameraManager
-import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.*
+import android.media.Image
+import android.media.ImageReader
 import android.media.MediaCodec
 import android.media.MediaRecorder
-import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.Range
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.Surface
-import android.view.SurfaceHolder
-import android.view.View
-import android.view.ViewGroup
-import android.webkit.MimeTypeMap
-import androidx.core.content.FileProvider
+import android.util.Size
+import android.view.*
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavController
-import androidx.navigation.Navigation
 import androidx.navigation.fragment.navArgs
 import com.example.android.camera.utils.AutoFitSurfaceView
 import com.example.android.camera.utils.OrientationLiveData
 import com.example.android.camera.utils.getPreviewOutputSize
-import com.example.android.camera2.video.BuildConfig
-import com.example.android.camera2.video.CameraActivity
-import com.example.android.camera2.video.R
+import com.example.android.camera2.video.*
 import kotlinx.android.synthetic.main.fragment_camera.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import java.io.File
+import java.lang.Runnable
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import kotlin.RuntimeException
+import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -73,11 +59,6 @@ class CameraFragment : Fragment() {
 
     /** AndroidX navigation arguments */
     private val args: CameraFragmentArgs by navArgs()
-
-    /** Host's navigation controller */
-    private val navController: NavController by lazy {
-        Navigation.findNavController(requireActivity(), R.id.fragment_container)
-    }
 
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
@@ -89,9 +70,10 @@ class CameraFragment : Fragment() {
     private val characteristics: CameraCharacteristics by lazy {
         cameraManager.getCameraCharacteristics(args.cameraId)
     }
-
+    private var _outputFile: File? = null
     /** File where the recording will be saved */
-    private val outputFile: File by lazy { createFile(requireContext(), "mp4") }
+    private val outputFile: File
+        get() = _outputFile!!
 
     /**
      * Setup a persistent [Surface] for the recorder so we can use it as an output target for the
@@ -109,12 +91,12 @@ class CameraFragment : Fragment() {
             prepare()
             release()
         }
-
         surface
     }
-
+    private var _recorder: MediaRecorder? = null
     /** Saves the video recording */
-    private val recorder: MediaRecorder by lazy { createRecorder(recorderSurface) }
+    private val recorder: MediaRecorder
+        get() = _recorder!!
 
     /** [HandlerThread] where all camera operations run */
     private val cameraThread = HandlerThread("CameraThread").apply { start() }
@@ -136,6 +118,17 @@ class CameraFragment : Fragment() {
             }, CameraActivity.ANIMATION_FAST_MILLIS)
         }
     }
+    private val animationBlinkTask: Runnable by lazy {
+        Runnable {
+            // Flash white animation
+            overlay.background = Color.argb(150, 255, 255, 255).toDrawable()
+            // Wait for ANIMATION_FAST_MILLIS
+            overlay.postDelayed({
+                // Remove white flash animation
+                overlay.background = null
+            }, CameraActivity.ANIMATION_FAST_MILLIS)
+        }
+    }
 
     /** Where the camera preview is displayed */
     private lateinit var viewFinder: AutoFitSurfaceView
@@ -143,32 +136,50 @@ class CameraFragment : Fragment() {
     /** Overlay on top of the camera preview */
     private lateinit var overlay: View
 
+    private var _session: CameraCaptureSession? = null
+        set(value) {
+            field = value
+            initSession()
+        }
     /** Captures frames from a [CameraDevice] for our video recording */
-    private lateinit var session: CameraCaptureSession
+    private val session: CameraCaptureSession
+        get() = _session!!
 
     /** The [CameraDevice] that will be opened in this fragment */
     private lateinit var camera: CameraDevice
 
+
+    private lateinit var videoStatus: TextView
+    private lateinit var aiResult: TextView
+
     /** Requests used for preview only in the [CameraCaptureSession] */
-    private val previewRequest: CaptureRequest by lazy {
+    private var _previewRequest: CaptureRequest? = null
+    private val previewRequest: CaptureRequest
+        get() = _previewRequest!!
+    private fun initSession() {
         // Capture request holds references to target surfaces
-        session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+        _previewRequest = session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
             // Add the preview surface target
             addTarget(viewFinder.holder.surface)
         }.build()
-    }
 
-    /** Requests used for preview and recording in the [CameraCaptureSession] */
-    private val recordRequest: CaptureRequest by lazy {
         // Capture request holds references to target surfaces
-        session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+        _recordRequest = session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
             // Add the preview and recording surface targets
             addTarget(viewFinder.holder.surface)
             addTarget(recorderSurface)
             // Sets user requested FPS for all targets
             set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(args.fps, args.fps))
         }.build()
+
+        _recorder?.release()
+        _recorder = createRecorder(recorderSurface)
     }
+
+    /** Requests used for preview and recording in the [CameraCaptureSession] */
+    private var _recordRequest: CaptureRequest? = null
+    private val recordRequest: CaptureRequest
+        get() = _recordRequest!!
 
     private var recordingStartMillis: Long = 0L
 
@@ -179,13 +190,28 @@ class CameraFragment : Fragment() {
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_camera, container, false)
+    ): View = inflater.inflate(R.layout.fragment_camera, container, false)
 
+    private fun setVideoStatus(status: String) {
+        videoStatus.post {
+            videoStatus.text = status
+        }
+    }
+
+    private lateinit var mPreviewSize: Size
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         overlay = view.findViewById(R.id.overlay)
         viewFinder = view.findViewById(R.id.view_finder)
+        videoStatus = view.findViewById(R.id.video_status)
+        aiResult = view.findViewById(R.id.ai_result)
+        capture_button.background = null
+        capture_button.setImageDrawable(toCaptureBg)
+        capture_button.scaleType = ImageView.ScaleType.FIT_CENTER
+
+        val cameraInfo = view.findViewById<TextView>(R.id.camera_info)
+        setHtml(cameraInfo, "Camera ${args.cameraId} <br /><small>${args.width}*${args.height}</small>")
 
         viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
@@ -200,6 +226,7 @@ class CameraFragment : Fragment() {
                 // Selects appropriate preview size and configures view finder
                 val previewSize = getPreviewOutputSize(
                         viewFinder.display, characteristics, SurfaceHolder::class.java)
+                mPreviewSize = previewSize
                 Log.d(TAG, "View finder size: ${viewFinder.width} x ${viewFinder.height}")
                 Log.d(TAG, "Selected preview size: $previewSize")
                 viewFinder.setAspectRatio(previewSize.width, previewSize.height)
@@ -231,6 +258,183 @@ class CameraFragment : Fragment() {
         setInputSurface(surface)
     }
 
+
+    private val takingPhoto = AtomicBoolean(false)
+    /**
+     * Helper function used to capture a still image using the [CameraDevice.TEMPLATE_STILL_CAPTURE]
+     * template. It performs synchronization between the [CaptureResult] and the [Image] resulting
+     * from the single capture, and outputs a [CombinedCaptureResult] object.
+     */
+    @SuppressLint("SetTextI18n")
+    private fun takePhoto() {
+        waitForAIComplete()
+        takingPhoto.set(true)
+        // Flush any images left in the image reader
+//        while (imageReader.acquireLatestImage() != null) {}
+
+        // Start a new image queue
+        imageReader.setOnImageAvailableListener({ reader ->
+            imageReader.setOnImageAvailableListener(null, null)
+            val image = reader.acquireLatestImage()
+            Log.d(TAG, "Image available in queue: ${image.timestamp}")
+            val imageSource = getImageAISource(image)
+            image.close()
+            val result = aiAnalyzeImage(args.cameraId, imageSource)
+            takingPhoto.set(false)
+            aiResult.post {
+                aiResult.text = "AI: $result"
+            }
+        }, imageReaderHandler)
+
+        viewFinder.post(animationBlinkTask)
+        val captureRequest = session.device.createCaptureRequest(
+            CameraDevice.TEMPLATE_STILL_CAPTURE).apply { addTarget(imageReader.surface) }
+        session.capture(captureRequest.build(), null, cameraHandler)
+    }
+
+    private var lastAIFrameTimestamp: Long = 0
+    private var lastFrameNumber: Long = 0
+    private var currentFps = 0
+    private fun needSendNextFrame(frame: Long): Boolean {
+        val current = System.currentTimeMillis()
+        val elapsedTime = current - lastAIFrameTimestamp
+        if (elapsedTime >= Settings.AI_FRAME_CYCLE_TIME) {
+            lastAIFrameTimestamp = current
+
+            currentFps = (((frame - lastFrameNumber) * 1000f) / (elapsedTime)).toInt()
+            lastFrameNumber = frame
+            return true
+        }
+        return false
+    }
+    private val captureListener = object : CameraCaptureSession.CaptureCallback() {
+
+        override fun onCaptureStarted(
+            session: CameraCaptureSession,
+            request: CaptureRequest,
+            timestamp: Long,
+            frameNumber: Long
+        ) {
+            super.onCaptureStarted(session, request, timestamp, frameNumber)
+            if (capturing) {
+                val ms = System.currentTimeMillis()
+                setVideoStatus("Recording: ${msToReadable(ms - recordingStartMillis)}")
+                aiResult.post {
+                    aiResult.text = ""
+                }
+            } else {
+                println("${args.cameraId} frame: $frameNumber")
+                if (needSendNextFrame(frameNumber) && Settings.ENABLE_AI_ANALYZE) {
+                    doSendAIImage()
+                }
+                setVideoStatus("Frame $frameNumber, FPS: $currentFps")
+            }
+        }
+    }
+    @Suppress("ControlFlowWithEmptyBody")
+    private fun waitForAIComplete() {
+        while (takingPhoto.get()) {}
+    }
+    private var capturing = false
+        set(value) {
+            field = value
+            waitForAIComplete()
+            if (value) {
+                capture_button.setImageDrawable(capturingBg)
+                startCapture()
+            } else {
+                capture_button.setImageDrawable(toCaptureBg)
+                stopCapture()
+            }
+        }
+    private fun toggleCapture() {
+        capturing = !capturing
+        capture_button.background = null
+    }
+
+    private fun doSendAIImage() {
+        if (!Settings.isAllCameraReady()) {
+            Settings.setCameraReady(args.cameraId)
+        }
+        if (!Settings.isAllCameraReady()) {
+            return
+        }
+        lifecycleScope.launch(Dispatchers.IO) {
+            takePhoto()
+        }
+    }
+
+    private fun startCapture() {
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            // Prevents screen rotation during the video recording
+            requireActivity().requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_LOCKED
+
+            recordingStartMillis = System.currentTimeMillis()
+            // Start recording repeating requests, which will stop the ongoing preview
+            //  repeating requests without having to explicitly call `session.stopRepeating`
+            session.setRepeatingRequest(recordRequest, captureListener, cameraHandler)
+
+            // Finalizes recorder setup and starts recording
+            recorder.apply {
+                // Sets output orientation based on current sensor value at start time
+                relativeOrientation.value?.let { setOrientationHint(it) }
+                try {
+                    prepare()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                start()
+            }
+            Log.d(TAG, "Recording started")
+
+            // Starts recording animation
+//            overlay.post(animationTask)
+        }
+    }
+    private fun stopCapture() {
+        lifecycleScope.launch(Dispatchers.IO) {
+
+            // Unlocks screen rotation after recording finished
+            requireActivity().requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+
+            // Requires recording of at least MIN_REQUIRED_RECORDING_TIME_MILLIS
+            val elapsedTimeMillis = System.currentTimeMillis() - recordingStartMillis
+            if (elapsedTimeMillis < MIN_REQUIRED_RECORDING_TIME_MILLIS) {
+                delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
+            }
+
+            Log.d(TAG, "Recording stopped. Output file: $outputFile")
+            recorder.stop()
+            try {
+                recorder.reset()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            startPreview()
+            // Removes recording animation
+            overlay.removeCallbacks(animationTask)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(requireActivity(), "MP4 saved at: $outputFile", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /** [HandlerThread] where all buffer reading operations run */
+    private val imageReaderThread = HandlerThread("imageReaderThread").apply { start() }
+
+    /** [Handler] corresponding to [imageReaderThread] */
+    private val imageReaderHandler = Handler(imageReaderThread.looper)
+    private val imageReader: ImageReader by lazy {
+        val size = characteristics.get(
+            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+            .getOutputSizes(Settings.AI_IMAGE_FORMAT).maxBy { it.height * it.width }!!
+        val imageReader = ImageReader.newInstance(size.width, size.height, Settings.AI_IMAGE_FORMAT, Settings.AI_IMAGE_SIZE)
+        imageReader
+    }
     /**
      * Begin all camera operations in a coroutine in the main thread. This function:
      * - Opens the camera
@@ -243,85 +447,28 @@ class CameraFragment : Fragment() {
         // Open the selected camera
         camera = openCamera(cameraManager, args.cameraId, cameraHandler)
 
+        startPreview()
+        // React to user touching the capture button
+        capture_button.setOnClickListener {
+            toggleCapture()
+        }
+    }
+    private suspend fun startPreview() {
+        _session?.close()
+        _outputFile = createFile(requireContext(), "mp4")
         // Creates list of Surfaces where the camera will output frames
-        val targets = listOf(viewFinder.holder.surface, recorderSurface)
-
+        val targets = if (Settings.ENABLE_AI_ANALYZE) {
+            listOf(viewFinder.holder.surface, recorderSurface, imageReader.surface)
+        } else {
+            listOf(viewFinder.holder.surface, recorderSurface)
+        }
         // Start a capture session using our open camera and list of Surfaces where frames will go
-        session = createCaptureSession(camera, targets, cameraHandler)
+        _session = createCaptureSession(camera, targets, cameraHandler)
 
         // Sends the capture request as frequently as possible until the session is torn down or
         //  session.stopRepeating() is called
-        session.setRepeatingRequest(previewRequest, null, cameraHandler)
+        session.setRepeatingRequest(previewRequest, captureListener, cameraHandler)
 
-        // React to user touching the capture button
-        capture_button.setOnTouchListener { view, event ->
-            when (event.action) {
-
-                MotionEvent.ACTION_DOWN -> lifecycleScope.launch(Dispatchers.IO) {
-
-                    // Prevents screen rotation during the video recording
-                    requireActivity().requestedOrientation =
-                            ActivityInfo.SCREEN_ORIENTATION_LOCKED
-
-                    // Start recording repeating requests, which will stop the ongoing preview
-                    //  repeating requests without having to explicitly call `session.stopRepeating`
-                    session.setRepeatingRequest(recordRequest, null, cameraHandler)
-
-                    // Finalizes recorder setup and starts recording
-                    recorder.apply {
-                        // Sets output orientation based on current sensor value at start time
-                        relativeOrientation.value?.let { setOrientationHint(it) }
-                        prepare()
-                        start()
-                    }
-                    recordingStartMillis = System.currentTimeMillis()
-                    Log.d(TAG, "Recording started")
-
-                    // Starts recording animation
-                    overlay.post(animationTask)
-                }
-
-                MotionEvent.ACTION_UP -> lifecycleScope.launch(Dispatchers.IO) {
-
-                    // Unlocks screen rotation after recording finished
-                    requireActivity().requestedOrientation =
-                            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-
-                    // Requires recording of at least MIN_REQUIRED_RECORDING_TIME_MILLIS
-                    val elapsedTimeMillis = System.currentTimeMillis() - recordingStartMillis
-                    if (elapsedTimeMillis < MIN_REQUIRED_RECORDING_TIME_MILLIS) {
-                        delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
-                    }
-
-                    Log.d(TAG, "Recording stopped. Output file: $outputFile")
-                    recorder.stop()
-
-                    // Removes recording animation
-                    overlay.removeCallbacks(animationTask)
-
-                    // Broadcasts the media file to the rest of the system
-                    MediaScannerConnection.scanFile(
-                            view.context, arrayOf(outputFile.absolutePath), null, null)
-
-                    // Launch external activity via intent to play video recorded using our provider
-                    startActivity(Intent().apply {
-                        action = Intent.ACTION_VIEW
-                        type = MimeTypeMap.getSingleton()
-                                .getMimeTypeFromExtension(outputFile.extension)
-                        val authority = "${BuildConfig.APPLICATION_ID}.provider"
-                        data = FileProvider.getUriForFile(view.context, authority, outputFile)
-                        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                                Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    })
-
-                    // Finishes our current camera screen
-                    delay(CameraActivity.ANIMATION_SLOW_MILLIS)
-                    navController.popBackStack()
-                }
-            }
-
-            true
-        }
     }
 
     /** Opens the camera and returns the opened device (as the result of the suspend coroutine) */
@@ -332,10 +479,14 @@ class CameraFragment : Fragment() {
             handler: Handler? = null
     ): CameraDevice = suspendCancellableCoroutine { cont ->
         manager.openCamera(cameraId, object : CameraDevice.StateCallback() {
-            override fun onOpened(device: CameraDevice) = cont.resume(device)
+            override fun onOpened(device: CameraDevice) {
+                setVideoStatus("Camera opened!")
+                cont.resume(device)
+            }
 
             override fun onDisconnected(device: CameraDevice) {
                 Log.w(TAG, "Camera $cameraId has been disconnected")
+                setVideoStatus("Camera disconnected!")
                 requireActivity().finish()
             }
 
@@ -390,9 +541,12 @@ class CameraFragment : Fragment() {
 
     override fun onDestroy() {
         super.onDestroy()
+        imageReaderThread.quitSafely()
         cameraThread.quitSafely()
-        recorder.release()
-        recorderSurface.release()
+        if (_recorder != null) {
+            _recorder?.release()
+            recorderSurface.release()
+        }
     }
 
     companion object {

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="recorder_size">32dp</dimen>
+    <dimen name="navi_elevation">3dp</dimen>
+    <dimen name="skip_settings_size">16dp</dimen>
+</resources>

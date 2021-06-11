@@ -24,10 +24,15 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.navArgs
+import com.example.android.camera2.video.AIHelper
 import com.example.android.camera2.video.R
+import com.example.android.camera2.video.Settings
 
 private const val PERMISSIONS_REQUEST_CODE = 10
 private val PERMISSIONS_REQUIRED = arrayOf(
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.CAMERA,
         Manifest.permission.RECORD_AUDIO)
 
@@ -35,14 +40,46 @@ private val PERMISSIONS_REQUIRED = arrayOf(
  * This [Fragment] requests permissions and, once granted, it will navigate to the next fragment
  */
 class PermissionsFragment : Fragment() {
-
+    private val args: PermissionsFragmentArgs by navArgs()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         if (hasPermissions(requireContext())) {
+            AIHelper.instance.initAI()
             // If permissions have already been granted, proceed
-            Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
+            if (!Settings.TRIPLE_CAMERA_DEV) {
+                Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
                     PermissionsFragmentDirections.actionPermissionsToSelector())
+            } else {
+                    if (args.cameraId == null) {
+                        Navigation.findNavController(requireActivity(), R.id.fragment_container)
+                            .navigate(
+                                PermissionsFragmentDirections.actionPermissionsToAllCamera()
+                            )
+                    } else {
+                        if (args.cameraId in Settings.CAMERA_USE_LEGACY) {
+                            Navigation.findNavController(requireActivity(), args.fragmentId)
+                                .navigate(
+                                    PermissionsFragmentDirections.actionPermissionsToCameraLegacy(
+                                        args.cameraId!!,
+                                        Settings.DEFAULT_CAMERA_WIDTH,
+                                        Settings.DEFAULT_CAMERA_HEIGHT,
+                                        Settings.DEFAULT_CAMERA_FPS
+                                    )
+                                )
+                        } else {
+                            Navigation.findNavController(requireActivity(), args.fragmentId)
+                                .navigate(
+                                    PermissionsFragmentDirections.actionPermissionsToCamera(
+                                        args.cameraId!!,
+                                        Settings.DEFAULT_CAMERA_WIDTH,
+                                        Settings.DEFAULT_CAMERA_HEIGHT,
+                                        Settings.DEFAULT_CAMERA_FPS
+                                    )
+                                )
+                        }
+                    }
+                }
         } else {
             // Request camera-related permissions
             requestPermissions(PERMISSIONS_REQUIRED, PERMISSIONS_REQUEST_CODE)
@@ -55,8 +92,15 @@ class PermissionsFragment : Fragment() {
         if (requestCode == PERMISSIONS_REQUEST_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 // Takes the user to the success fragment when permission is granted
-                Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
-                        PermissionsFragmentDirections.actionPermissionsToSelector())
+                if (!Settings.TRIPLE_CAMERA_DEV) {
+                    Navigation.findNavController(requireActivity(), R.id.fragment_container)
+                        .navigate(
+                            PermissionsFragmentDirections.actionPermissionsToSelector()
+                        )
+                } else {
+                   Navigation.findNavController(requireActivity(), R.id.fragment_container).navigate(
+                        PermissionsFragmentDirections.actionPermissionsToAllCamera())
+                }
             } else {
                 Toast.makeText(context, "Permission request denied", Toast.LENGTH_LONG).show()
             }

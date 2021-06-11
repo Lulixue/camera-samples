@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2018 The app Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:title="@string/settings"
+    android:key="main"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory  android:selectable="false"
+        app:iconSpaceReserved="false"
+        app:initialExpandedChildrenCount="2"
+        app:key="skip_settings"
+        app:title="Skip Settings">
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:iconSpaceReserved="true"
+            app:isPreferenceVisible="true"
+            app:key="skip_settings_next_time"
+            app:title="Skip Settings Next Time"  />
+    </PreferenceCategory>
+
+    <PreferenceCategory  android:selectable="false"
+        app:iconSpaceReserved="false"
+        app:initialExpandedChildrenCount="2"
+        app:key="functionalities"
+        app:title="Functionality">
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:iconSpaceReserved="true"
+            app:isPreferenceVisible="true"
+            app:key="enable_ai_analyze"
+            app:title="Enable AI Analyze"  />
+        <SwitchPreference
+            app:defaultValue="true"
+            app:summary="Enable if DevBoard，Otherwise disable"
+            app:iconSpaceReserved="true"
+            app:isPreferenceVisible="true"
+            android:defaultValue="true"
+            app:key="dev_board"
+            app:title="Triple-Cam DevBoard"  />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:selectable="false"
+        app:iconSpaceReserved="false"
+        app:key="dev_board_category"
+        app:title="Dev Board">
+
+        <MultiSelectListPreference
+            app:iconSpaceReserved="true"
+            app:title="Enable Camera(s)"
+            app:key="enable_cameras"
+            app:defaultValue="@array/cameras_values"
+            app:entries="@array/cameras"
+            app:entryValues="@array/cameras_values"
+            />
+
+        <MultiSelectListPreference
+            app:iconSpaceReserved="true"
+            app:title="Legacy Fragment for Camera"
+            app:key="legacy_cameras"
+            app:defaultValue="@array/default_legacy_cameras_values"
+            app:entries="@array/cameras"
+            app:entryValues="@array/cameras_values"
+            />
+
+        <ListPreference
+            app:iconSpaceReserved="true"
+            android:defaultValue="30"
+            android:entries="@array/frame_per_seconds"
+            android:entryValues="@array/frame_per_seconds_values"
+            android:key="fps"
+            android:summary="%s"
+            android:title="Frame Per Second" >
+        </ListPreference>
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,7 +1,6 @@
 #include <jni.h>
 #include <string>
 #include <dlfcn.h>
-#include "mms_api.h"
 #include  <android/log.h>
 
 // log标签
@@ -148,33 +147,6 @@ Java_com_example_mmsbridge_MmsBridgeApi_translateImages(JNIEnv *env, jobject thi
     env->SetObjectField(result, size4KField, size4K);
 
     return ret;
-}
-
-void testDynamic()
-{
-    void *handle = dlopen("libmms_api.so",RTLD_LAZY);
-    TestFunc test;
-
-    if(handle==nullptr)
-    {
-        printf("error:dlopen libComparison.so Fail.\n");
-        return;
-    }
-
-    dlerror();
-    test = (TestFunc)dlsym(handle, "get_lib_name");
-
-    if(dlerror() != nullptr)
-    {
-        printf("error:dlsym method max fail.\n");
-    }
-    else {
-        char *ret = test();
-        printf("call: %s", ret);
-        delete ret;
-    }
-
-    dlclose(handle);
 }
 
 extern "C"

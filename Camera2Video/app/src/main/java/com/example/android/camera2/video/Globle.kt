@@ -6,7 +6,9 @@ import android.media.Image
 import android.os.Build
 import android.text.Html
 import android.widget.TextView
+import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
+import androidx.core.math.MathUtils.clamp
 import com.example.android.camera2.video.utils.BitmapUtil
 import com.example.android.camera2.video.utils.LogUtil
 
@@ -51,18 +53,65 @@ fun getImageAISource(image: Image): AIImageSource {
         image.format, image.timestamp)
 }
 
+fun fetchNV21(@NonNull bitmap: Bitmap): ByteArray {
+    var w = bitmap.width
+    var h = bitmap.height
+    val size = w * h
+    val pixels = IntArray(size)
+    bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
+    val nv21 = ByteArray(size * 3 / 2)
+
+    // Make w and h are all even.
+    w = w and 1.inv()
+    h = h and 1.inv()
+    for (i in 0 until h) {
+        for (j in 0 until w) {
+            val yIndex = i * w + j
+            val argb = pixels[yIndex]
+            val a = argb shr 24 and 0xff // unused
+            val r = argb shr 16 and 0xff
+            val g = argb shr 8 and 0xff
+            val b = argb and 0xff
+            var y = (66 * r + 129 * g + 25 * b + 128 shr 8) + 16
+            y = clamp(y, 16, 255)
+            nv21[yIndex] = y.toByte()
+            if (i % 2 == 0 && j % 2 == 0) {
+                var u = (-38 * r - 74 * g + 112 * b + 128 shr 8) + 128
+                var v = (112 * r - 94 * g - 18 * b + 128 shr 8) + 128
+                u = clamp(u, 0, 255)
+                v = clamp(v, 0, 255)
+                nv21[size + i / 2 * w + j] = v.toByte()
+                nv21[size + i / 2 * w + j + 1] = u.toByte()
+            }
+        }
+    }
+    return nv21
+}
 
 val capturingBg: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.record_off)!!
 val toCaptureBg: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.record_on)!!
 val skiSettingsIcon: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.disabled)!!
 val showSettingIcon: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.settings)!!
 val array = 0
-fun aiAnalyzeImage(id: String, imgSource: AIImageSource): Int {
-    val fmt = imgSource.format
-    val width = imgSource.width
-    val height = imgSource.height
-    val timestamp = imgSource.timestamp
+
+const val AI_WIDTH = 2880
+const val AI_HEIGHT = 2160
+fun getResizedBuffer(imgSource: AIImageSource, newWidth: Int, newHeight: Int): ByteArray {
     val bytes = getBitmapArrayFromImage(imgSource)
+    val height = imgSource.height
+    val width = imgSource.width
+    val bmp = getBitmapImageFromYUV(bytes, width, height)!!
+    val resizedBmp = Bitmap.createScaledBitmap(bmp, newWidth, newHeight, false)
+
+    return fetchNV21(resizedBmp)
+}
+
+fun aiAnalyzeImage(id: String, imgSource: AIImageSource): Int {
+    val timestamp = imgSource.timestamp
+    val fmt = imgSource.format
+    val height = AI_HEIGHT
+    val width = AI_WIDTH
+    val bytes = getResizedBuffer(imgSource, AI_WIDTH, AI_HEIGHT)
 
     val result = AIHelper.instance.detectTag(bytes, fmt, width, height, timestamp)
     AIHelper.imageManager.pushImage(id, bytes, width, height)

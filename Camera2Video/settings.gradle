@@ -16,4 +16,5 @@
 
 include 'app'
 include 'utils'
-include 'mmsBridge'
+//include 'mmsBridge'
+include ':mmsBridge'

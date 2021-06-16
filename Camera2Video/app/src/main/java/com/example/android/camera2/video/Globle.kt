@@ -109,9 +109,9 @@ fun getResizedBuffer(imgSource: AIImageSource, newWidth: Int, newHeight: Int): B
 fun aiAnalyzeImage(id: String, imgSource: AIImageSource): Int {
     val timestamp = imgSource.timestamp
     val fmt = imgSource.format
-    val height = AI_HEIGHT
-    val width = AI_WIDTH
-    val bytes = getResizedBuffer(imgSource, AI_WIDTH, AI_HEIGHT)
+    val height = imgSource.height
+    val width = imgSource.width
+    val bytes = getBitmapArrayFromImage(imgSource)
 
     val result = AIHelper.instance.detectTag(bytes, fmt, width, height, timestamp)
     AIHelper.imageManager.pushImage(id, bytes, width, height)

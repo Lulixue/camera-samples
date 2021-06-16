@@ -72,7 +72,7 @@ class SelectorFragment : Fragment() {
 
     companion object {
 
-        private data class CameraInfo(
+        data class CameraInfo(
                 val name: String,
                 val cameraId: String,
                 val size: Size,
@@ -88,7 +88,7 @@ class SelectorFragment : Fragment() {
 
         /** Lists all video-capable cameras and supported resolution and FPS combinations */
         @SuppressLint("InlinedApi")
-        private fun enumerateVideoCameras(cameraManager: CameraManager): List<CameraInfo> {
+        fun enumerateVideoCameras(cameraManager: CameraManager): List<CameraInfo> {
             val availableCameras: MutableList<CameraInfo> = mutableListOf()
 
             // Iterate over the list of cameras and add those with high speed video recording

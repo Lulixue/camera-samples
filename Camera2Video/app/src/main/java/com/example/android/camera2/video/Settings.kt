@@ -1,6 +1,7 @@
 package com.example.android.camera2.video
 
 import android.graphics.ImageFormat
+import android.util.Size
 import com.tencent.mmkv.MMKV
 
 object Settings {
@@ -13,6 +14,7 @@ object Settings {
     const val KEY_ENABLE_CAMERAS = "enable_cameras"
     const val KEY_LEGACY_CAMERAS = "legacy_cameras"
     const val KEY_CAMERA_FPS = "fps"
+    const val KEY_RESOLUTION = "resolution"
     const val KEY_DEV_BOARD = "dev_board"
     const val KEY_SKIP_SETTINGS = "skip_settings_next_time"
 
@@ -22,9 +24,25 @@ object Settings {
     /** Maximum number of images that will be held in the reader's buffer */
     const val AI_IMAGE_SIZE: Int = 1
     const val AI_FRAME_CYCLE_TIME = 500L // ms
-    const val DEFAULT_CAMERA_WIDTH = 3840
-    const val DEFAULT_CAMERA_HEIGHT = 2160
-    const val CAMERA_COUNT = 3
+    private const val CAMERA_COUNT = 3
+
+    const val DEFAULT_RESOLUTION = "3840x2160"
+
+    val RESOLUTION: String
+        get() = mmkv.getString(KEY_RESOLUTION, DEFAULT_RESOLUTION)!!
+
+    val DEFAULT_CAMERA_WIDTH: Int
+        get() {
+            val res = mmkv.getString(KEY_RESOLUTION, DEFAULT_RESOLUTION)!!
+            return (res.split("x")[0]).toInt()
+        }
+
+    val DEFAULT_CAMERA_HEIGHT: Int
+        get() {
+            val res = mmkv.getString(KEY_RESOLUTION, DEFAULT_RESOLUTION)!!
+            return (res.split("x")[1]).toInt()
+        }
+
     val DEFAULT_CAMERA_FPS
         get() = mmkv.getInt(KEY_CAMERA_FPS, 30)
     val TRIPLE_CAMERA_DEV

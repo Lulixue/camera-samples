@@ -45,6 +45,7 @@ import com.example.android.camera.utils.OrientationLiveData
 import com.example.android.camera.utils.getPreviewOutputSize
 import com.example.android.camera2.video.*
 import kotlinx.android.synthetic.main.fragment_camera.*
+import kotlinx.android.synthetic.main.fragment_camera2_video.view.*
 import kotlinx.coroutines.*
 import java.io.File
 import java.lang.Runnable
@@ -357,7 +358,7 @@ class CameraFragment : Fragment() {
             Settings.setCameraReady(args.cameraId)
         }
         if (!Settings.isAllCameraReady()) {
-            return
+//            return
         }
         lifecycleScope.launch(Dispatchers.IO) {
             takePhoto()
@@ -429,10 +430,10 @@ class CameraFragment : Fragment() {
     /** [Handler] corresponding to [imageReaderThread] */
     private val imageReaderHandler = Handler(imageReaderThread.looper)
     private val imageReader: ImageReader by lazy {
-        val size = characteristics.get(
-            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
-            .getOutputSizes(Settings.AI_IMAGE_FORMAT).maxBy { it.height * it.width }!!
-        val imageReader = ImageReader.newInstance(size.width, size.height, Settings.AI_IMAGE_FORMAT, Settings.AI_IMAGE_SIZE)
+//        val size = characteristics.get(
+//            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+//            .getOutputSizes(Settings.AI_IMAGE_FORMAT).maxBy { it.height * it.width }!!
+        val imageReader = ImageReader.newInstance(args.width, args.height, Settings.AI_IMAGE_FORMAT, Settings.AI_IMAGE_SIZE)
         imageReader
     }
     /**

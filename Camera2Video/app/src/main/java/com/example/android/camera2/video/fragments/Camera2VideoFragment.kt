@@ -559,9 +559,9 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
         if (!Settings.isAllCameraReady()) {
             Settings.setCameraReady(args.cameraId)
         }
-        if (!Settings.isAllCameraReady()) {
-            return
-        }
+//        if (!Settings.isAllCameraReady()) {
+//            return
+//        }
         lifecycleScope.launch(Dispatchers.IO) {
             takePhoto()
         }
@@ -724,6 +724,7 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             takingPhoto.set(false)
             aiResult.post {
                 aiResult.text = "AI: $result"
+
             }
         }, imageReaderHandler)
 

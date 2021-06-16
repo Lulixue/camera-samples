@@ -77,6 +77,13 @@
             app:entries="@array/cameras"
             app:entryValues="@array/cameras_values"
             />
+        <ListPreference
+            app:iconSpaceReserved="true"
+            android:defaultValue="30"
+            android:key="resolution"
+            android:summary="%s"
+            android:title="Resolution" >
+        </ListPreference>
 
         <ListPreference
             app:iconSpaceReserved="true"

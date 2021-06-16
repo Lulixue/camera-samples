@@ -99,30 +99,23 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
         }
     }
 
+    /**
+     * In this sample, we choose a video size with 3x4 aspect ratio. Also, we don't use sizes
+     * larger than 1080p, since MediaRecorder cannot handle such a high-resolution video.
+     *
+     * @param choices The list of available sizes
+     * @return The video size
+     */
+    private fun chooseVideoSize(choices: Array<Size>): Size {
+        return Size(args.width, args.height)
+    }
+
     companion object {
         private const val TAG = "Camera2VideoFragment"
         private const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
         private const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
         private val DEFAULT_ORIENTATIONS = SparseIntArray()
         private val INVERSE_ORIENTATIONS = SparseIntArray()
-
-        /**
-         * In this sample, we choose a video size with 3x4 aspect ratio. Also, we don't use sizes
-         * larger than 1080p, since MediaRecorder cannot handle such a high-resolution video.
-         *
-         * @param choices The list of available sizes
-         * @return The video size
-         */
-        private fun chooseVideoSize(choices: Array<Size>): Size {
-            /*for (Size size : choices) {
-            if (size.getWidth() == size.getHeight() * 4 / 3 && size.getWidth() <= 1080) {
-                return size;
-            }
-        }*/
-            //Log.e(TAG, "Couldn't find any suitable video size");
-            return Size(3840, 2160)
-            //return new Size(1080, 720);
-        }
 
         /**
          * Given `choices` of `Size`s supported by a camera, chooses the smallest one whose
@@ -432,7 +425,7 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
                 map.getOutputSizes(
                     SurfaceTexture::class.java
                 ),
-                3840, 2160, mVideoSize
+                args.width, args.height, mVideoSize
             )
             val orientation = resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -691,7 +684,7 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
 
     private val imageReader: ImageReader by lazy {
         ImageReader.newInstance(
-            mPreviewSize!!.width, mPreviewSize!!.height,
+            args.width, args.height,
             Settings.AI_IMAGE_FORMAT, Settings.AI_IMAGE_SIZE
         )
     }

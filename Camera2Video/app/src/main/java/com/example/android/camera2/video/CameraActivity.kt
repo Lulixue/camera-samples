@@ -16,12 +16,15 @@
 
 package com.example.android.camera2.video
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
-import java.lang.Exception
+import com.example.android.camera2.video.utils.LoadSoFileUtils
+import java.io.File
 
 
 class CameraActivity : AppCompatActivity() {
@@ -31,6 +34,23 @@ class CameraActivity : AppCompatActivity() {
 
     private lateinit var container: FrameLayout
 
+
+    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    private fun initSdSo() {
+        val dir: File = getDir("jniLibs", Activity.MODE_PRIVATE)
+        val ext = "/sdcard/DCIM"
+
+        try {
+            LoadSoFileUtils.loadSoFile(this, ext)
+            val currentFiles: Array<File> = dir.listFiles()
+            for (currentFile in currentFiles) {
+                System.load(currentFile.absolutePath)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
@@ -39,6 +59,7 @@ class CameraActivity : AppCompatActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         } catch (_ : Exception) {}
 
+        initSdSo()
         println(AIHelper.mmsBridge.stringFromJNI())
         AIHelper.instance.initHelper()
     }

@@ -280,11 +280,13 @@ class CameraFragment : Fragment() {
             Log.d(TAG, "Image available in queue: ${image.timestamp}")
             val imageSource = getImageAISource(image)
             image.close()
-            val result = aiAnalyzeImage(args.cameraId, imageSource)
+//            val result = aiAnalyzeImage(args.cameraId, imageSource)
+
+            translateImage(args.cameraId, imageSource)
             takingPhoto.set(false)
-            aiResult.post {
-                aiResult.text = "AI: $result"
-            }
+//            aiResult.post {
+//                aiResult.text = "AI: $result"
+//            }
         }, imageReaderHandler)
 
         viewFinder.post(animationBlinkTask)
@@ -325,7 +327,8 @@ class CameraFragment : Fragment() {
                 }
             } else {
                 println("${args.cameraId} frame: $frameNumber")
-                if (needSendNextFrame(frameNumber) && Settings.ENABLE_AI_ANALYZE) {
+                needSendNextFrame(frameNumber)
+                if (enableTranslate && !Settings.isCameraPushed(args.cameraId)) {
                     doSendAIImage()
                 }
                 setVideoStatus("Frame $frameNumber, FPS: $currentFps")

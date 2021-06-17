@@ -69,4 +69,5 @@ object Settings {
     fun setCameraReady(id: String) {
         readyCameras.add(id)
     }
+    fun isCameraPushed(id: String) = readyCameras.contains(id)
 }

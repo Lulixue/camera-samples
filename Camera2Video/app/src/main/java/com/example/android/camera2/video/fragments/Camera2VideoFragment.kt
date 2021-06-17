@@ -60,7 +60,6 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
     private lateinit var overlay4k: View
     private lateinit var image2K: ImageView
     private lateinit var image4K: ImageView
-    private var encoding = !Settings.SHOW_TRANSLATE_RESULT_IMAGES
     private val animationBlinkTask2k = Runnable {
         // Flash white animation
         overlay2k.setBackgroundColor(Color.argb(150, 255, 255, 255))
@@ -78,26 +77,7 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             { overlay4k.background = null } // Remove white flash animation
             , CameraActivity.ANIMATION_FAST_MILLIS)
     }
-    private val translateCallback = object : ImageManager.TranslateCallback {
-        override fun onResult(result: TranslateResult) {
-            if (encoding) {
-                return
-            }
-            lifecycleScope.launch(Dispatchers.Default) {
-                encoding = true
-                val bmp2k = getBitmapImageFromYUV(result.buffer2K, result.size2K.width, result.size2K.height)
-                val bmp4k = getBitmapImageFromYUV(result.buffer4K, result.size4K.width, result.size4K.height)
 
-                encoding = false
-                withContext(Dispatchers.Main) {
-                    image2K.post(animationBlinkTask2k)
-                    image2K.setImageBitmap(bmp2k)
-                    image4K.post(animationBlinkTask4k)
-                    image4K.setImageBitmap(bmp4k)
-                }
-            }
-        }
-    }
 
     /**
      * In this sample, we choose a video size with 3x4 aspect ratio. Also, we don't use sizes
@@ -310,7 +290,6 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
         overlay2k = view.findViewById(R.id.overlay2k)
         overlay4k = view.findViewById(R.id.overlay4k)
 
-        AIHelper.imageManager.callback = translateCallback
         setHtml(
             cameraInfo,
             "Camera " + cameraId + "<br /><small>" + args!!.width + "*" + args!!.height + "</small>"
@@ -572,7 +551,8 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
                     setAIResult("")
                     setVideoStatus("Recording: " + msToReadable(System.currentTimeMillis() - recordingStartMillis))
                 } else {
-                    if (needSendNextFrame(frameNumber) && Settings.ENABLE_AI_ANALYZE) {
+                    needSendNextFrame(frameNumber)
+                    if (enableTranslate && !Settings.isCameraPushed(args.cameraId)) {
                         doSendAIImage()
                     }
                     setVideoStatus("Frame $frameNumber, FPS: $currentFps")
@@ -713,12 +693,12 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             Log.d(TAG, "Image available in queue: ${image.timestamp}")
             val imageSource = getImageAISource(image)
             image.close()
-            val result = aiAnalyzeImage(args.cameraId, imageSource)
+//            val result = aiAnalyzeImage(args.cameraId, imageSource)
+            translateImage(args.cameraId, imageSource)
             takingPhoto.set(false)
-            aiResult.post {
-                aiResult.text = "AI: $result"
-
-            }
+//            aiResult.post {
+//                aiResult.text = "AI: $result"
+//            }
         }, imageReaderHandler)
 
         videoStatus.post(animationBlinkTask)

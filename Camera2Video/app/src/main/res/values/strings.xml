@@ -27,6 +27,8 @@
     <string name="continue_to">Continue</string>
     <string name="translate_2k">2K</string>
     <string name="translate_4k">4K</string>
+    <string name="results">Results</string>
+    <string name="translate">Translate</string>
 
 
     <string-array name="cameras">

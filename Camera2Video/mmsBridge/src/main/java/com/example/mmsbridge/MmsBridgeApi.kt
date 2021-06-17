@@ -4,9 +4,9 @@ import android.util.Size
 
 class TranslateResult {
     lateinit var buffer2K: ByteArray
-    lateinit var buffer4K: ByteArray
+    lateinit var buffer8K: ByteArray
     lateinit var size2K: Size
-    lateinit var size4K: Size
+    lateinit var size8K: Size
 }
 
 data class TranslateImage(val imageArray: ByteArray, val width: Int, val height: Int) {

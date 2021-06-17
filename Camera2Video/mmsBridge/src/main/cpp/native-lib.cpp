@@ -130,8 +130,8 @@ Java_com_example_mmsbridge_MmsBridgeApi_translateImages(JNIEnv *env, jobject thi
     jmethodID methodID = env->GetMethodID(clazzSize, "<init>", "(II)V");
     jfieldID buffer2KField = env->GetFieldID(clazz, "buffer2K", "[B");
     jfieldID size2KField = env->GetFieldID(clazz, "size2K", "Landroid/util/Size;");
-    jfieldID size4KField = env->GetFieldID(clazz, "size4K", "Landroid/util/Size;");
-    jfieldID buffer4KField = env->GetFieldID(clazz, "buffer4K", "[B");
+    jfieldID size4KField = env->GetFieldID(clazz, "size8K", "Landroid/util/Size;");
+    jfieldID buffer4KField = env->GetFieldID(clazz, "buffer8K", "[B");
 
     jobject size2K = env->NewObject(clazzSize, methodID, out2KImageSize[0], out2KImageSize[1]);
     jobject size4K = env->NewObject(clazzSize, methodID, out4kImageSize[0], out4kImageSize[1]);

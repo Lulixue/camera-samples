@@ -15,7 +15,6 @@
  */
 package com.example.android.camera2.video.fragments
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -29,7 +28,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import android.util.Range
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
@@ -57,9 +55,11 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
     private val args: Camera2VideoFragmentArgs by navArgs()
 
     private lateinit var overlay2k: View
-    private lateinit var overlay4k: View
+    private lateinit var overlay8K: View
+    private lateinit var size2K: TextView
+    private lateinit var size8K: TextView
     private lateinit var image2K: ImageView
-    private lateinit var image4K: ImageView
+    private lateinit var image8K: ImageView
     private val animationBlinkTask2k = Runnable {
         // Flash white animation
         overlay2k.setBackgroundColor(Color.argb(150, 255, 255, 255))
@@ -69,14 +69,15 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             , CameraActivity.ANIMATION_FAST_MILLIS)
     }
 
-    private val animationBlinkTask4k = Runnable {
+    private val animationBlinkTask8k = Runnable {
         // Flash white animation
-        overlay4k.setBackgroundColor(Color.argb(150, 255, 255, 255))
+        overlay8K.setBackgroundColor(Color.argb(150, 255, 255, 255))
         // Wait for ANIMATION_FAST_MILLIS
-        overlay4k.postDelayed(
-            { overlay4k.background = null } // Remove white flash animation
+        overlay8K.postDelayed(
+            { overlay8K.background = null } // Remove white flash animation
             , CameraActivity.ANIMATION_FAST_MILLIS)
     }
+
 
 
     /**
@@ -286,9 +287,11 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
         overlay = view.findViewById(R.id.overlay)
 
         image2K = view.findViewById(R.id.image2K)
-        image4K = view.findViewById(R.id.image4K)
+        image8K = view.findViewById(R.id.image8K)
+        size2K = view.findViewById(R.id.size2K)
+        size8K = view.findViewById(R.id.size8K)
         overlay2k = view.findViewById(R.id.overlay2k)
-        overlay4k = view.findViewById(R.id.overlay4k)
+        overlay8K = view.findViewById(R.id.overlay8k)
 
         setHtml(
             cameraInfo,
@@ -302,6 +305,25 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             syncSettingsBtnIcon(it as ImageButton)
         }
         syncSettingsBtnIcon(settingsBtn)
+
+        finishListener = object : TranslateFinishListener {
+            override fun onFinish(result: TranslateResult) {
+                size2K.text = "${result.size2K}"
+                size8K.text = "${result.size8K}"
+                lifecycleScope.launch(Dispatchers.Default) {
+                    val bmp2k =
+                        getBitmapImageFromYUV(result.buffer2K, result.size2K.width, result.size2K.height)
+                    val bmp4k =
+                        getBitmapImageFromYUV(result.buffer8K, result.size8K.width, result.size8K.height)
+                    overlay2k.post(animationBlinkTask2k)
+                    overlay8K.post(animationBlinkTask8k)
+                    withContext(Dispatchers.Main) {
+                        image2K.setImageBitmap(bmp2k)
+                        image8K.setImageBitmap(bmp4k)
+                    }
+                }
+            }
+        }
     }
     private fun syncSettingsBtnIcon(btn: ImageButton) {
         btn.setImageDrawable(if (Settings.SKIP_SETTINGS) skiSettingsIcon else showSettingIcon)

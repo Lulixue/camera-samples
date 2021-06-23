@@ -48,9 +48,9 @@ Java_com_example_mmsbridge_MmsBridgeApi_stringFromJNI(
 }
 
 int mms_translate_images(JNIEnv *env, unsigned char *img1, unsigned char *img2, unsigned char *img3,
-                              const int sizes[3], const int widths[3], const int heights[3],
-                              unsigned char **out2k, unsigned char **out4k,
-                              int out2KImageSize[2], int out4KImageSize[2], int outSize[2])
+                         const int sizes[3], const int widths[3], const int heights[3],
+                         unsigned char **out2k, unsigned char **out4k,
+                         int out2KImageSize[2], int out4KImageSize[2], int outSize[2])
 {
     LOGD("start translate");
     int _2KSize = sizes[0];
@@ -58,16 +58,16 @@ int mms_translate_images(JNIEnv *env, unsigned char *img1, unsigned char *img2, 
     jboolean isCopy = false;
     *out2k = (unsigned char*)env->GetByteArrayElements(out2kArray, &isCopy);
     env->SetByteArrayRegion(out2kArray, 0, _2KSize, (const jbyte *)img1);
-    out2KImageSize[0] = widths[0];
-    out2KImageSize[1] = heights[0];
+    out2KImageSize[0] = 2560;
+    out2KImageSize[1] = 720;
     outSize[0] = _2KSize;
 
-    int _4KSize = sizes[2];
+    int _4KSize = sizes[1];
     jbyteArray out4kArray = env->NewByteArray(_4KSize);
-    env->SetByteArrayRegion(out4kArray, 0, _2KSize, (const jbyte *)img3);
+    env->SetByteArrayRegion(out4kArray, 0, _2KSize, (const jbyte *)img2);
     *out4k = (unsigned char*)env->GetByteArrayElements(out4kArray, &isCopy);
-    out4KImageSize[0] = widths[2];
-    out4KImageSize[1] = heights[2];
+    out4KImageSize[0] = 7680;
+    out4KImageSize[1] = 2160;
     outSize[1] = _4KSize;
 
     LOGD("end translate");

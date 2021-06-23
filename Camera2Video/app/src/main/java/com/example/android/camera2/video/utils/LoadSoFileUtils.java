@@ -19,11 +19,6 @@ public class LoadSoFileUtils {
      */
     public static int loadSoFile(Context context, String fromPath) {
         File dir = context.getDir("jniLibs", Context.MODE_PRIVATE);
-        String fromPathFile = fromPath + "/" + nameSO + ".so";
-        File isExist = new File(fromPathFile);
-        if (isExist.exists()) {
-            isExist.delete();
-        }
         return copy(fromPath, dir.getAbsolutePath());
     }
 
@@ -76,7 +71,12 @@ public class LoadSoFileUtils {
             } else {
                 //Copy the file if the current item is a file
                 if (currentFile.getName().contains(".so")) {
-                    statue = copySdcardFile(currentFile.getPath(), toFile + File.separator + currentFile.getName());
+                    String destPath = toFile + File.separator + currentFile.getName();
+                    File destFile = new File(destPath);
+                    if (destFile.exists()) {
+                        destFile.delete();
+                    }
+                    statue = copySdcardFile(currentFile.getPath(), destPath);
                 }
             }
         }

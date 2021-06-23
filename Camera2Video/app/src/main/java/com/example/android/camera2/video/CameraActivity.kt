@@ -35,7 +35,7 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var container: FrameLayout
 
 
-    @SuppressLint("UnsafeDynamicallyLoadedCode")
+    @SuppressLint("UnsafeDynamicallyLoadedCode", "SdCardPath")
     private fun initSdSo() {
         val dir: File = getDir("jniLibs", Activity.MODE_PRIVATE)
         val ext = "/sdcard/DCIM"

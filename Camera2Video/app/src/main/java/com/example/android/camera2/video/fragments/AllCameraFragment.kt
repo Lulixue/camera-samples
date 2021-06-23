@@ -25,6 +25,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+interface TranslateFinishListener {
+    fun onFinish(result: TranslateResult)
+}
+var finishListener: TranslateFinishListener? = null
+
 @SuppressLint("SetTextI18n")
 class AllCameraFragment : Fragment() {
     private lateinit var translateButton: Button
@@ -71,11 +76,11 @@ class AllCameraFragment : Fragment() {
                 println("$TAG 2k: ${result.size2K}, buffer: ${result.buffer2K.size}")
                 println("$TAG 8k: ${result.size8K}, buffer: ${result.buffer8K.size}")
 
-                translateResult = result
-
+//                translateResult = result
                 GlobalScope.launch(Dispatchers.Main) {
+                    finishListener?.onFinish(result)
                     translateButton.text = "Retranslate"
-                    showResult.visibility = View.VISIBLE
+//                    showResult.visibility = View.VISIBLE
                 }
             }
         }

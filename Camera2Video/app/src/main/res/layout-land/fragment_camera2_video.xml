@@ -99,7 +99,7 @@
             android:src="@drawable/settings" />
     </FrameLayout>
     <LinearLayout
-        android:visibility="gone"
+        android:visibility="visible"
         android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="0dp">
@@ -118,12 +118,11 @@
                 android:layout_height="match_parent"
                 android:foreground="@android:color/transparent" />
             <TextView
-                android:id="@+id/translate2K"
+                android:id="@+id/size2K"
                 android:layout_marginBottom="5dp"
                 android:layout_marginEnd="5dp"
                 android:textSize="18sp"
                 android:layout_gravity="bottom|end"
-                android:text="@string/translate_2k"
                 android:textColor="@color/yellow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -134,21 +133,20 @@
             android:layout_width="0dp">
             <ImageView
                 android:layout_width="match_parent"
-                android:id="@+id/image4K"
+                android:id="@+id/image8K"
                 android:layout_height="match_parent"
                 tools:ignore="NestedWeights" />
             <View
-                android:id="@+id/overlay4k"
+                android:id="@+id/overlay8k"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:foreground="@android:color/transparent" />
             <TextView
-                android:id="@+id/translate4K"
+                android:id="@+id/size8K"
                 android:layout_marginBottom="5dp"
                 android:layout_marginEnd="5dp"
                 android:textSize="18sp"
                 android:layout_gravity="bottom|end"
-                android:text="@string/translate_4k"
                 android:textColor="@color/yellow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>

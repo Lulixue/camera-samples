@@ -28,6 +28,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
+import android.util.Range
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.*
@@ -487,19 +488,18 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             closePreviewSession()
             val texture = mTextureView!!.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
-            mPreviewBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             val surfaces: MutableList<Surface> = ArrayList()
-            //texture.setOnFrameAvailableListener(listener1,mBackgroundHandler);
-//            fpsRanges = Range.create(args.fps, args.fps)
-//            mPreviewBuilder!!.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRanges)
             Log.d(TAG, " fps set 60")
             val previewSurface = Surface(texture)
             surfaces.add(previewSurface)
-            mPreviewBuilder!!.addTarget(previewSurface)
 
             // Set up Surface for the MediaRecorder
             val imageSurface = imageReader!!.getSurface()
             surfaces.add(imageSurface)
+
+            mPreviewBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+            mPreviewBuilder!!.addTarget(previewSurface)
+            mPreviewBuilder!!.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range.create(args.fps, args.fps))
             //            mPreviewBuilder.addTarget(imageSurface);
             mCameraDevice!!.createCaptureSession(
                 surfaces,
@@ -606,7 +606,7 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             return
         }
         try {
-            setUpCaptureRequestBuilder(mPreviewBuilder)
+//            setUpCaptureRequestBuilder(mPreviewBuilder)
             //            HandlerThread thread = new HandlerThread("CameraPreview");
 //            thread.start();
             // 重复请求获取图像数据，常用于预览和连拍
@@ -767,6 +767,7 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
             val recorderSurface = mMediaRecorder!!.surface
             surfaces.add(recorderSurface)
             mPreviewBuilder!!.addTarget(recorderSurface)
+            mPreviewBuilder!!.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(args.fps, args.fps))
 
 
 

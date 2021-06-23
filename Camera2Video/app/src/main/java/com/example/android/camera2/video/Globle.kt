@@ -1,23 +1,15 @@
 package com.example.android.camera2.video
 
-import android.graphics.*
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.media.Image
 import android.os.Build
 import android.text.Html
 import android.widget.TextView
-import androidx.annotation.NonNull
 import androidx.core.content.ContextCompat
-import androidx.core.math.MathUtils.clamp
-import androidx.lifecycle.lifecycleScope
 import com.example.android.camera2.video.utils.BitmapUtil
-import com.example.android.camera2.video.utils.LogUtil
-import com.example.mmsbridge.TranslateResult
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-
+const val TAG = "CameraDemo"
 fun setHtml(tv: TextView, txt: String) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         tv.text = Html.fromHtml(txt, Html.FROM_HTML_MODE_COMPACT)
@@ -26,14 +18,6 @@ fun setHtml(tv: TextView, txt: String) {
     }
 }
 fun getBitmapImageFromYUV(data: ByteArray, width: Int, height: Int): Bitmap? {
-//    val yuvimage = YuvImage(data, ImageFormat.YUY2, width, height, null)
-//    val baos = ByteArrayOutputStream()
-//    yuvimage.compressToJpeg(Rect(0, 0, width, height), 40, baos)
-//    val jdata: ByteArray = baos.toByteArray()
-////    val bitmapFatoryOptions: BitmapFactory.Options = BitmapFactory.Options()
-////    bitmapFatoryOptions.inPreferredConfig = Bitmap.Config.RGB_565
-//    return BitmapFactory.decodeByteArray(jdata, 0, jdata.size, null)
-
     return BitmapUtil.getBitmapImageFromYUV(data, width, height)
 }
 
@@ -58,41 +42,6 @@ fun getImageAISource(image: Image): AIImageSource {
         image.format, image.timestamp)
 }
 
-fun fetchNV21(@NonNull bitmap: Bitmap): ByteArray {
-    var w = bitmap.width
-    var h = bitmap.height
-    val size = w * h
-    val pixels = IntArray(size)
-    bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
-    val nv21 = ByteArray(size * 3 / 2)
-
-    // Make w and h are all even.
-    w = w and 1.inv()
-    h = h and 1.inv()
-    for (i in 0 until h) {
-        for (j in 0 until w) {
-            val yIndex = i * w + j
-            val argb = pixels[yIndex]
-            val a = argb shr 24 and 0xff // unused
-            val r = argb shr 16 and 0xff
-            val g = argb shr 8 and 0xff
-            val b = argb and 0xff
-            var y = (66 * r + 129 * g + 25 * b + 128 shr 8) + 16
-            y = clamp(y, 16, 255)
-            nv21[yIndex] = y.toByte()
-            if (i % 2 == 0 && j % 2 == 0) {
-                var u = (-38 * r - 74 * g + 112 * b + 128 shr 8) + 128
-                var v = (112 * r - 94 * g - 18 * b + 128 shr 8) + 128
-                u = clamp(u, 0, 255)
-                v = clamp(v, 0, 255)
-                nv21[size + i / 2 * w + j] = v.toByte()
-                nv21[size + i / 2 * w + j + 1] = u.toByte()
-            }
-        }
-    }
-    return nv21
-}
-
 val capturingBg: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.record_off)!!
 val toCaptureBg: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.record_on)!!
 val skiSettingsIcon: Drawable = ContextCompat.getDrawable(CameraApplication.instance, R.drawable.disabled)!!
@@ -110,18 +59,14 @@ fun aiAnalyzeImage(id: String, imgSource: AIImageSource): Int {
 
 var enableTranslate = false
 fun translateImage(id: String, imgSource: AIImageSource) {
-    if (id != "0") {
-//        return
-    }
     if (!enableTranslate) {
         return
     }
     val height = imgSource.height
     val width = imgSource.width
     val bytes = getBitmapArrayFromImage(imgSource)
+    println("$TAG Input cam$id: $width*$height, ${bytes.size}")
     AIHelper.imageManager.pushImage(id, bytes, width, height)
-//    AIHelper.imageManager.pushImage("1", bytes, width, height)
-//    AIHelper.imageManager.pushImage("2", bytes, width, height)
 }
 
 fun msToReadable(ms: Long): String {

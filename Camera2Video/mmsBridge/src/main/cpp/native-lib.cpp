@@ -14,7 +14,7 @@ typedef char* (*TestFunc)();
 typedef int (*TranslateFunc)(JNIEnv *env, unsigned char *img1, unsigned char *img2, unsigned char *img3,
                               const int sizes[3], const int widths[3], const int heights[3],
                               unsigned char **out2k, unsigned char **out4k,
-                              int out2KImageSize[2], int out4KImageSize[2], long outSize[2]);
+                              int out2KImageSize[2], int out4KImageSize[2], int outSize[2]);
 
 
 void *so_handle = nullptr;
@@ -62,12 +62,12 @@ int mms_translate_images(JNIEnv *env, unsigned char *img1, unsigned char *img2, 
     out2KImageSize[1] = heights[0];
     outSize[0] = _2KSize;
 
-    int _4KSize = sizes[1];
+    int _4KSize = sizes[2];
     jbyteArray out4kArray = env->NewByteArray(_4KSize);
-    env->SetByteArrayRegion(out4kArray, 0, _2KSize, (const jbyte *)img2);
+    env->SetByteArrayRegion(out4kArray, 0, _2KSize, (const jbyte *)img3);
     *out4k = (unsigned char*)env->GetByteArrayElements(out4kArray, &isCopy);
-    out4KImageSize[0] = widths[1];
-    out4KImageSize[1] = heights[1];
+    out4KImageSize[0] = widths[2];
+    out4KImageSize[1] = heights[2];
     outSize[1] = _4KSize;
 
     LOGD("end translate");
@@ -117,7 +117,7 @@ Java_com_example_mmsbridge_MmsBridgeApi_translateImages(JNIEnv *env, jobject thi
     };
 
 
-    int ret = mms_translate_images(env, (unsigned char*)img1Buf, (unsigned char*)img2Buf, (unsigned char*)img3Buf,
+    int ret = translateFunc(env, (unsigned char*)img1Buf, (unsigned char*)img2Buf, (unsigned char*)img3Buf,
                               sizes, widths, height,
                               &buffer2K, &buffer4K, out2KImageSize, out4kImageSize, outSize);
 

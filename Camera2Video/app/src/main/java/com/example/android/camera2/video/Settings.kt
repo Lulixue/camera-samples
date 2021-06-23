@@ -26,7 +26,7 @@ object Settings {
     const val AI_FRAME_CYCLE_TIME = 500L // ms
     private const val CAMERA_COUNT = 3
 
-    const val DEFAULT_RESOLUTION = "3840x2160"
+    private const val DEFAULT_RESOLUTION = "3840x2160"
 
     val RESOLUTION: String
         get() = mmkv.getString(KEY_RESOLUTION, DEFAULT_RESOLUTION)!!
@@ -44,7 +44,7 @@ object Settings {
         }
 
     val DEFAULT_CAMERA_FPS
-        get() = mmkv.getInt(KEY_CAMERA_FPS, 30)
+        get() = mmkv.getInt(KEY_CAMERA_FPS, 60)
     val TRIPLE_CAMERA_DEV
         get() = mmkv.getBoolean(KEY_DEV_BOARD, true)
 

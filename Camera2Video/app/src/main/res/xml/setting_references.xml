@@ -34,6 +34,7 @@
 
     <PreferenceCategory  android:selectable="false"
         app:iconSpaceReserved="false"
+        app:isPreferenceVisible="false"
         app:initialExpandedChildrenCount="2"
         app:key="functionalities"
         app:title="Functionality">

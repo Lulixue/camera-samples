@@ -1,5 +1,6 @@
 package com.example.android.camera2.video.fragments
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -24,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
+@SuppressLint("SetTextI18n")
 class AllCameraFragment : Fragment() {
     private lateinit var translateButton: Button
     private lateinit var showResult: Button
@@ -64,6 +66,11 @@ class AllCameraFragment : Fragment() {
         AIHelper.imageManager.callback = object : ImageManager.TranslateCallback {
             override fun onResult(result: TranslateResult) {
                 enableTranslate = false
+                println("$TAG end translating...")
+                println("$TAG Result: ")
+                println("$TAG 2k: ${result.size2K}, buffer: ${result.buffer2K.size}")
+                println("$TAG 8k: ${result.size8K}, buffer: ${result.buffer8K.size}")
+
                 translateResult = result
 
                 GlobalScope.launch(Dispatchers.Main) {
@@ -79,10 +86,11 @@ class AllCameraFragment : Fragment() {
         translateButton.text = "Translate"
         showResult.visibility = View.GONE
         translateButton.setOnClickListener {
-            translateButton.text = "Translate"
+            translateButton.text = "Translating"
             showResult.visibility = View.GONE
             Settings.readyCameras.clear()
             enableTranslate = true
+            println("$TAG start translating...")
         }
 
         val settingsBtn = view.findViewById<ImageButton>(R.id.skip_settings)

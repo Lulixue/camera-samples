@@ -162,6 +162,7 @@ class CameraFragment : Fragment() {
         _previewRequest = session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
             // Add the preview surface target
             addTarget(viewFinder.holder.surface)
+            set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(args.fps, args.fps))
         }.build()
 
         // Capture request holds references to target surfaces

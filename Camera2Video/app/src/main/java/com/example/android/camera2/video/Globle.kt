@@ -122,9 +122,10 @@ fun getBitmapArrayFromImage(imgSource: AIImageSource): ByteArray {
     return nv21
 }
 
-fun bitmapToFile(bmp: Bitmap, filename: String) {
+fun bitmapToFile(bmp: Bitmap, title: String, filename: String) {
+    val path = "$filename/$title${bmp.width}x${bmp.height}.bmp"
     try {
-        FileOutputStream(filename).use { out ->
+        FileOutputStream(path).use { out ->
             bmp.compress(
                 Bitmap.CompressFormat.PNG,
                 100,
@@ -136,22 +137,25 @@ fun bitmapToFile(bmp: Bitmap, filename: String) {
     }
 }
 
+const val RESULT_DIR = "sdcard/DCIM/result"
+fun initResultDir() {
+    val file = File(RESULT_DIR)
+    if (file.exists()) {
+        file.deleteRecursively()
+    }
+    file.mkdir()
+}
+
 var counter = 0
 fun saveBitmap(bmp2k: Bitmap?, bmp8k: Bitmap?): String {
-    val destDir = File("sdcard/DCIM", String.format("%03d", ++counter))
-    if (destDir.exists()) {
-        destDir.deleteRecursively()
-    }
+    val destDir = File(RESULT_DIR, String.format("%03d", ++counter))
     destDir.mkdir()
 
-    val file2k = File(destDir, "2k.bmp")
-    val file8k = File(destDir, "8k.bmp")
-
     bmp2k?.also {
-        bitmapToFile(bmp2k, file2k.absolutePath)
+        bitmapToFile(it, "2k", destDir.absolutePath)
     }
     bmp8k?.also {
-        bitmapToFile(bmp8k, file8k.absolutePath)
+        bitmapToFile(it, "8k", destDir.absolutePath)
     }
     return destDir.absolutePath
 }

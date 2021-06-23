@@ -62,6 +62,7 @@ class CameraActivity : AppCompatActivity() {
         initSdSo()
         println(AIHelper.mmsBridge.stringFromJNI())
         AIHelper.instance.initHelper()
+        initResultDir()
     }
 
     override fun onDestroy() {

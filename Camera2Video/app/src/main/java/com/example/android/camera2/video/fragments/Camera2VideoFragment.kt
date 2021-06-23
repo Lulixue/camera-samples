@@ -320,8 +320,14 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
                     withContext(Dispatchers.Main) {
                         image2K.setImageBitmap(bmp2k)
                         image8K.setImageBitmap(bmp8k)
-                        val savePath = saveBitmap(bmp2k, bmp8k)
-                        Toast.makeText(requireContext(),"result saved at: $savePath", Toast.LENGTH_LONG).show()
+                    }
+                    val savePath = saveBitmap(bmp2k, bmp8k)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "result saved at: $savePath",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             }

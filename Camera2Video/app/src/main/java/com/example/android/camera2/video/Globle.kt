@@ -8,6 +8,9 @@ import android.text.Html
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.example.android.camera2.video.utils.BitmapUtil
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 const val TAG = "CameraDemo"
 fun setHtml(tv: TextView, txt: String) {
@@ -117,4 +120,38 @@ fun getBitmapArrayFromImage(imgSource: AIImageSource): ByteArray {
         System.arraycopy(vSrcBytes, 0, nv21, w * h, w * h / 2 - 1)
     }
     return nv21
+}
+
+fun bitmapToFile(bmp: Bitmap, filename: String) {
+    try {
+        FileOutputStream(filename).use { out ->
+            bmp.compress(
+                Bitmap.CompressFormat.PNG,
+                100,
+                out
+            ) // bmp is your Bitmap instance
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+}
+
+var counter = 0
+fun saveBitmap(bmp2k: Bitmap?, bmp8k: Bitmap?): String {
+    val destDir = File("sdcard/DCIM", String.format("%03d", ++counter))
+    if (destDir.exists()) {
+        destDir.deleteRecursively()
+    }
+    destDir.mkdir()
+
+    val file2k = File(destDir, "2k.bmp")
+    val file8k = File(destDir, "8k.bmp")
+
+    bmp2k?.also {
+        bitmapToFile(bmp2k, file2k.absolutePath)
+    }
+    bmp8k?.also {
+        bitmapToFile(bmp8k, file8k.absolutePath)
+    }
+    return destDir.absolutePath
 }

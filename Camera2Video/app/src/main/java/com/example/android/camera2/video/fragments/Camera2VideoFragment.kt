@@ -313,13 +313,15 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
                 lifecycleScope.launch(Dispatchers.Default) {
                     val bmp2k =
                         getBitmapImageFromYUV(result.buffer2K, result.size2K.width, result.size2K.height)
-                    val bmp4k =
+                    val bmp8k =
                         getBitmapImageFromYUV(result.buffer8K, result.size8K.width, result.size8K.height)
                     overlay2k.post(animationBlinkTask2k)
                     overlay8K.post(animationBlinkTask8k)
                     withContext(Dispatchers.Main) {
                         image2K.setImageBitmap(bmp2k)
-                        image8K.setImageBitmap(bmp4k)
+                        image8K.setImageBitmap(bmp8k)
+                        val savePath = saveBitmap(bmp2k, bmp8k)
+                        Toast.makeText(requireContext(),"result saved at: $savePath", Toast.LENGTH_LONG).show()
                     }
                 }
             }

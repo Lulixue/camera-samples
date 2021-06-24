@@ -4,6 +4,7 @@ import android.content.Context
 import com.example.mmsbridge.MmsBridgeApi
 import com.example.mmsbridge.TranslateImage
 import com.example.mmsbridge.TranslateResult
+import com.example.mmsbridge.TranslateResult2
 import com.meishe.aidetect.AIEngine
 import java.io.*
 
@@ -13,6 +14,7 @@ class ImageManager(private val bridgeApi: MmsBridgeApi) {
 
     interface TranslateCallback {
         fun onResult(result: TranslateResult)
+        fun onResult(result: TranslateResult2)
     }
 
     fun pushImage(cameraId: String, array: ByteArray, width: Int, height: Int) {
@@ -22,8 +24,8 @@ class ImageManager(private val bridgeApi: MmsBridgeApi) {
                 val img1 = images[CAMERA_0]!!
                 val img2 = images[CAMERA_1]!!
                 val img3 = images[CAMERA_2]!!
-                val result = TranslateResult()
-                val ret = bridgeApi.translateImages(img1, img2, img3, result)
+                val result = TranslateResult2()
+                val ret = bridgeApi.translateImages2(img1, img2, img3, result)
                 if (ret == 0) {
                     callback?.onResult(result)
                 }

@@ -15,10 +15,14 @@ typedef int (*TranslateFunc)(JNIEnv *env, unsigned char *img1, unsigned char *im
                               const int sizes[3], const int widths[3], const int heights[3],
                               unsigned char **out2k, unsigned char **out4k,
                               int out2KImageSize[2], int out4KImageSize[2], int outSize[2]);
+typedef int (*TranslateFunc2)(JNIEnv *env, unsigned char *img1, unsigned char *img2, unsigned char *img3,
+                             const int sizes[3], const int widths[3], const int heights[3],
+                             unsigned char **out, int outImageSize[2], int *outSize);
 
 
 void *so_handle = nullptr;
 TranslateFunc translateFunc = nullptr;
+TranslateFunc2  translateFunc2 = nullptr;
 void init() {
     if (so_handle == nullptr) {
         so_handle = dlopen("libmms_api.so",RTLD_LAZY);
@@ -27,7 +31,12 @@ void init() {
         translateFunc = (TranslateFunc) dlsym(so_handle, "mms_translate_images");
         if (translateFunc == nullptr) {
             printf("translate null\n");
-            exit(0);
+        }
+    }
+    if (translateFunc2 == nullptr) {
+        translateFunc2 = (TranslateFunc2) dlsym(so_handle, "mms_translate_images2");
+        if (translateFunc2 == nullptr) {
+            printf("translate null\n");
         }
     }
 }
@@ -45,6 +54,24 @@ Java_com_example_mmsbridge_MmsBridgeApi_stringFromJNI(
         jobject /* this */) {
     std::string hello = "hello from JNI";
     return env->NewStringUTF(hello.c_str());
+}
+
+int mms_translate_images2(JNIEnv *env, unsigned char *img1, unsigned char *img2, unsigned char *img3,
+                         const int sizes[3], const int widths[3], const int heights[3],
+                         unsigned char **out, int outImageSize[2], int *outSize)
+{
+    LOGD("start translate");
+    int outBufferSize = sizes[0];
+    jbyteArray out2kArray = env->NewByteArray(outBufferSize);
+    jboolean isCopy = false;
+    *out = (unsigned char*)env->GetByteArrayElements(out2kArray, &isCopy);
+    env->SetByteArrayRegion(out2kArray, 0, outBufferSize, (const jbyte *)img1);
+    outImageSize[0] = 11000;
+    outImageSize[1] = 3000;
+    *outSize = outBufferSize;
+
+    LOGD("end translate");
+    return 0;
 }
 
 int mms_translate_images(JNIEnv *env, unsigned char *img1, unsigned char *img2, unsigned char *img3,
@@ -72,6 +99,70 @@ int mms_translate_images(JNIEnv *env, unsigned char *img1, unsigned char *img2, 
 
     LOGD("end translate");
     return 0;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_mmsbridge_MmsBridgeApi_translateImages2(JNIEnv *env, jobject thiz, jobject img1,
+                                                         jobject img2, jobject img3,
+                                                         jobject result) {
+    unsigned char *buffer = nullptr;
+    int outImageSize[2];
+    int outSize;
+    jboolean isCopy = false;
+
+    jclass clazzSize = env->FindClass("android/util/Size");
+    jclass clazzImage = env->FindClass("com/example/mmsbridge/TranslateImage");
+    jfieldID imageArrayField = env->GetFieldID(clazzImage, "imageArray", "[B");
+    jfieldID imageWidthField = env->GetFieldID(clazzImage, "width", "I");
+    jfieldID imageHeightField = env->GetFieldID(clazzImage, "height", "I");
+
+    auto img1Array = (jbyteArray)env->GetObjectField(img1, imageArrayField);
+    auto img2Array = (jbyteArray)env->GetObjectField(img2, imageArrayField);
+    auto img3Array = (jbyteArray)env->GetObjectField(img3, imageArrayField);
+    jbyte* img1Buf = env->GetByteArrayElements(img1Array, &isCopy);
+    jbyte* img2Buf = env->GetByteArrayElements(img2Array, &isCopy);
+    jbyte* img3Buf = env->GetByteArrayElements(img3Array, &isCopy);
+
+
+    const int sizes[3] = {
+            env->GetArrayLength(img1Array),
+            env->GetArrayLength(img2Array),
+            env->GetArrayLength(img3Array)
+    };
+    const int widths[3] = {
+            env->GetIntField(img1, imageWidthField),
+            env->GetIntField(img2, imageWidthField),
+            env->GetIntField(img3, imageWidthField)
+    };
+    const int height[3] = {
+            env->GetIntField(img1, imageHeightField),
+            env->GetIntField(img2, imageHeightField),
+            env->GetIntField(img3, imageHeightField)
+    };
+
+
+    int ret = translateFunc2(env, (unsigned char*)img1Buf, (unsigned char*)img2Buf, (unsigned char*)img3Buf,
+                            sizes, widths, height,
+                            &buffer, outImageSize, &outSize);
+
+    env->ReleaseByteArrayElements(img1Array, img1Buf, 0);
+    env->ReleaseByteArrayElements(img2Array, img2Buf, 0);
+    env->ReleaseByteArrayElements(img3Array, img3Buf, 0);
+
+    jclass clazz = (env)->FindClass("com/example/mmsbridge/TranslateResult2");
+    jmethodID methodID = env->GetMethodID(clazzSize, "<init>", "(II)V");
+    jfieldID bufferField = env->GetFieldID(clazz, "buffer", "[B");
+    jfieldID sizeField = env->GetFieldID(clazz, "size", "Landroid/util/Size;");
+
+    jobject size = env->NewObject(clazzSize, methodID, outImageSize[0], outImageSize[1]);
+
+    jbyteArray bufferValue = env->NewByteArray(outSize);
+    env->SetByteArrayRegion(bufferValue, 0, outSize, (const jbyte *)buffer);
+    env->SetObjectField(result, bufferField, bufferValue);
+    env->SetObjectField(result, sizeField, size);
+
+    return ret;
 }
 
 extern "C"

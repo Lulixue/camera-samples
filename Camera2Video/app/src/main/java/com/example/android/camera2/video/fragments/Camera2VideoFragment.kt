@@ -42,6 +42,7 @@ import androidx.navigation.fragment.navArgs
 import com.example.android.camera2.video.*
 import com.example.android.camera2.video.views.AutoFitTextureView
 import com.example.mmsbridge.TranslateResult
+import com.example.mmsbridge.TranslateResult2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -323,6 +324,26 @@ class Camera2VideoFragment : Fragment(), View.OnClickListener {
                         image8K.setImageBitmap(bmp8k)
                     }
                     val savePath = saveBitmap(bmp2k, bmp8k)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(
+                            requireContext(),
+                            "result saved at: $savePath",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+
+            override fun onFinish(result: TranslateResult2) {
+                size2K.text = "${result.size}"
+                lifecycleScope.launch(Dispatchers.Default) {
+                    val bmp =
+                        getBitmapImageFromYUV(result.buffer, result.size.width, result.size.height)
+                    overlay2k.post(animationBlinkTask2k)
+                    withContext(Dispatchers.Main) {
+                        image2K.setImageBitmap(bmp)
+                    }
+                    val savePath = saveBitmap2(bmp)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
                             requireContext(),

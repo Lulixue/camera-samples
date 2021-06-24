@@ -159,3 +159,12 @@ fun saveBitmap(bmp2k: Bitmap?, bmp8k: Bitmap?): String {
     }
     return destDir.absolutePath
 }
+fun saveBitmap2(bmp: Bitmap?): String {
+    val destDir = File(RESULT_DIR, String.format("%03d", ++counter))
+    destDir.mkdir()
+
+    bmp?.also {
+        bitmapToFile(it, "result", destDir.absolutePath)
+    }
+    return destDir.absolutePath
+}

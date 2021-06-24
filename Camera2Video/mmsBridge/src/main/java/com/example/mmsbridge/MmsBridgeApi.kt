@@ -9,6 +9,11 @@ class TranslateResult {
     lateinit var size8K: Size
 }
 
+class TranslateResult2 {
+    lateinit var buffer: ByteArray
+    lateinit var size: Size
+}
+
 data class TranslateImage(val imageArray: ByteArray, val width: Int, val height: Int) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -36,6 +41,8 @@ class MmsBridgeApi {
     external fun open()
     external fun close()
     external fun stringFromJNI(): String
+    external fun translateImages2(img1: TranslateImage, img2: TranslateImage, img3: TranslateImage,
+                                 result: TranslateResult2): Int
     external fun translateImages(img1: TranslateImage, img2: TranslateImage, img3: TranslateImage,
                                  result: TranslateResult): Int
 }

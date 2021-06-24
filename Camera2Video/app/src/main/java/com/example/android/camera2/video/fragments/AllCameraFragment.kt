@@ -21,12 +21,14 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.android.camera2.video.*
 import com.example.mmsbridge.TranslateResult
+import com.example.mmsbridge.TranslateResult2
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 interface TranslateFinishListener {
     fun onFinish(result: TranslateResult)
+    fun onFinish(result: TranslateResult2)
 }
 var finishListener: TranslateFinishListener? = null
 
@@ -76,11 +78,21 @@ class AllCameraFragment : Fragment() {
                 println("$TAG 2k: ${result.size2K}, buffer: ${result.buffer2K.size}")
                 println("$TAG 8k: ${result.size8K}, buffer: ${result.buffer8K.size}")
 
-//                translateResult = result
                 GlobalScope.launch(Dispatchers.Main) {
                     finishListener?.onFinish(result)
                     translateButton.text = "Retranslate"
-//                    showResult.visibility = View.VISIBLE
+                }
+            }
+
+            override fun onResult(result: TranslateResult2) {
+                enableTranslate = false
+                println("$TAG end translating...")
+                println("$TAG Result: ")
+                println("$TAG bmp: ${result.size}, buffer: ${result.buffer.size}")
+
+                GlobalScope.launch(Dispatchers.Main) {
+                    finishListener?.onFinish(result)
+                    translateButton.text = "Retranslate"
                 }
             }
         }
